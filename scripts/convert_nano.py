@@ -62,34 +62,30 @@ def main():
 
             evt_info = tree.arrays(["event"], library="np")
 
-            muons = ak.zip({
-                "pt": tree["Muon_pt"].array(),
-                "eta": tree["Muon_eta"].array(),
-                "phi": tree["Muon_phi"].array(),
-                "mass": tree["Muon_mass"].array(),
-            })
-            lep = awkward3D_to_padded(muons, 2).astype(np.float32)
-            lep = ak.to_numpy(ak.stack([lep_branch[f] for f in ["pt", "eta", "phi", "mass"]], axis=-1))
+            lep = ak.concatenate(
+                [tree["Muon_pt"].array()[..., np.newaxis],
+                 tree["Muon_eta"].array()[..., np.newaxis],
+                 tree["Muon_phi"].array()[..., np.newaxis],
+                 tree["Muon_mass"].array()[..., np.newaxis]],
+                axis=-1
+            )
             lep = awkward3D_to_padded(lep, 2).astype(np.float32)
-
-            jet = ak.zip({
-                "pt":   tree["Jet_pt"].array(),
-                "eta":  tree["Jet_eta"].array(),
-                "phi":  tree["Jet_phi"].array(),
-                "mass": tree["Jet_mass"].array(),
-            })
-            jet = ak.to_numpy(ak.stack([jet_branch[f] for f in ["pt", "eta", "phi", "mass"]], axis=-1))
+            jet = ak.concatenate(
+                [tree["Jet_pt"].array()[..., np.newaxis],
+                 tree["Jet_eta"].array()[..., np.newaxis],
+                 tree["Jet_phi"].array()[..., np.newaxis],
+                 tree["Jet_mass"].array()[..., np.newaxis]],
+                axis=-1
+            )
             jet = awkward3D_to_padded(jet, 10).astype(np.float32)
             jet[..., 3] = np.clip(jet[..., 3], 0, None)
             jet[..., 0] = np.clip(jet[..., 0], 0, None)
-
-            met = ak.zip({
-                "pt":   tree["MET_pt"].array(),
-                "phi":  tree["MET_phi"].array(),
-            })
-            met = ak.to_numpy(ak.stack([met_branch[f] for f in ["pt", "phi"]], axis=-1))
+            met = ak.concatenate(
+                [tree["MET_pt"].array()[..., np.newaxis],
+                 tree["MET_phi"].array()[..., np.newaxis]],
+                axis=-1
+            )
             met = awkward3D_to_padded(met).astype(np.float32)
-
             if i == 0:
                 for split in ["even", "odd"]:
                     init_dataset(outFile, split, "lep", lep)
