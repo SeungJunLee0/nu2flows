@@ -1,8 +1,8 @@
 # output dir will be created by hydra
 # data_dir: /srv/beegfs/scratch/groups/dpnc/atlas/ttbar_vflows/data/rel24_240209/hdf5/
 # output_dir: /home/users/l/leighm/scratch/Saved_Networks/
-data_dir: /users/seyang/data/nuflows/TTto2L2Nu/data/
-output_dir: /users/seyang/work/mdn/nu2flows/logs/
+data_dir: /home/sjlee/nu2flows/data/
+output_dir: /home/sjlee/nu2flows/logs/
 
 # Interpolated
 root_dir: ${oc.env:PROJECT_ROOT}
