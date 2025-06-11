@@ -1,6 +1,6 @@
 wandb:
   _target_: lightning.pytorch.loggers.wandb.WandbLogger
-  entity: slowmoyang
+  entity: seungjunlee15-sejong-university
   offline: False
   id: null
   log_model: False
