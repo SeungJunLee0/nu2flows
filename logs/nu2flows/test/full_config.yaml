@@ -1,0 +1,136 @@
+seed: 42
+project_name: nu2flows
+network_name: test
+ckpt_path: null
+weight_ckpt_path: null
+tags: null
+precision: medium
+compile: null
+full_resume: false
+new_seed: null
+ckpt_flag: last.ckpt
+trainer:
+  _target_: lightning.Trainer
+  min_epochs: 1
+  max_epochs: 999999
+  enable_progress_bar: true
+  accelerator: auto
+  devices: 1
+  precision: 32
+  check_val_every_n_epoch: 1
+  gradient_clip_val: 1
+  num_sanity_val_steps: 0
+  default_root_dir: /home/sjlee/nu2flows/logs/
+model:
+  _target_: src.models.nuflows.NuFlows
+  gen_validation: 10
+  embed_config:
+    hddn_dim: 256
+    num_blocks: 1
+    act_h: SiLU
+  transformer_config:
+    inpt_dim: 128
+    outp_dim: 128
+    do_packed: true
+    encoder_config:
+      dim: 128
+      num_layers: 5
+      num_registers: 2
+      layer_config:
+        num_heads: 8
+    classattention_config:
+      dim: 128
+      num_layers: 2
+      do_final_norm: true
+      layer_config:
+        num_heads: 4
+  flow_config:
+    num_stacks: 10
+    mlp_width: 256
+    mlp_depth: 2
+    mlp_act: SiLU
+    tail_bound: 1.0
+    tanh_prescale: 0.5
+    dropout: 0
+    num_bins: 10
+    flow_type: coupling
+    base_dist: uniform
+    do_lu: false
+    init_identity: true
+  optimizer:
+    _target_: torch.optim.AdamW
+    _partial_: true
+    lr: 0.0001
+  scheduler:
+    _target_: mltools.mltools.lightning_utils.linear_warmup_cosine_decay
+    _partial_: true
+    total_steps: null
+    warmup_steps: 10000
+    init_factor: 1.0e-05
+    final_factor: 1.0e-05
+datamodule:
+  _target_: src.datamodules.dilepton.H5DataModule
+  train_conf:
+    data_dir: /home/sjlee/nu2flows/data/
+    met_kins: px,py
+    lep_kins: px,py,pz,log_energy
+    jet_kins: px,py,pz,log_energy
+    nu_kins: px,py,pz
+    file_list:
+    - train_1.h5
+    - train_2.h5
+    - train_3.h5
+  valid_conf:
+    data_dir: /home/sjlee/nu2flows/data/
+    met_kins: px,py
+    lep_kins: px,py,pz,log_energy
+    jet_kins: px,py,pz,log_energy
+    nu_kins: px,py,pz
+    file_list:
+    - train_4.h5
+  test_conf:
+    data_dir: /home/sjlee/nu2flows/data/
+    met_kins: px,py
+    lep_kins: px,py,pz,log_energy
+    jet_kins: px,py,pz,log_energy
+    nu_kins: px,py,pz
+    file_list:
+    - test.h5
+  loader_conf:
+    pin_memory: true
+    batch_size: 4096
+    num_workers: 0
+loggers:
+  wandb:
+    _target_: lightning.pytorch.loggers.wandb.WandbLogger
+    entity: seungjunlee15-sejong-university
+    offline: false
+    id: 1jatspr2
+    log_model: false
+    project: nu2flows
+    name: test
+    save_dir: /home/sjlee/nu2flows/logs//nu2flows/test/
+paths:
+  data_dir: /home/sjlee/nu2flows/data/
+  output_dir: /home/sjlee/nu2flows/logs/
+  root_dir: /home/sjlee/nu2flows
+  full_path: /home/sjlee/nu2flows/logs//nu2flows/test/
+callbacks:
+  model_checkpoint:
+    _target_: lightning.pytorch.callbacks.ModelCheckpoint
+    dirpath: /home/sjlee/nu2flows/logs//nu2flows/test//checkpoints
+    filename: best_{epoch:03d}
+    monitor: valid/total_loss
+    mode: min
+    save_last: true
+    auto_insert_metric_name: false
+  early_stopping:
+    _target_: lightning.pytorch.callbacks.EarlyStopping
+    monitor: valid/total_loss
+    mode: min
+    patience: 300
+  lr_monitor:
+    _target_: lightning.pytorch.callbacks.LearningRateMonitor
+    logging_interval: step
+  rich_progress:
+    _target_: lightning.pytorch.callbacks.RichProgressBar
